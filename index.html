@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Gruniożerca</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background: url('img/background.jpg');
+        }
+
+        img,
+        audio {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="myCanvas" width="480" height="320"></canvas>
+    <img id="marchew" src="img\marchew_sprites.png">
+    <img id="grunio" src="img\grunio_sprites.png">
+    <img id="hearts" src="img\serca_sprites.png">
+    <img id="chmura" src="img\chmura.png">
+    <audio id="audio" controls>
+        <source src="audio/background1.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="background" autoplay>
+        <source src="audio/background1.mp3" type="audio/mpeg">
+    </audio>
+    <center>
+        Tytuł: GruniżercaJS</br>
+        Autor: MrFantaste</br>
+        Inspiracja: "Gruniożerca" made by Arhon</br>
+        Sterowanie:</br> Zmiana kolorów - A/D lub Lewa strzałka/Prawa strzałka</br> Ruch - Myszka
+    </center>
+    <script>
+
+
+        let canvas = document.getElementById("myCanvas");
+        let ctx = canvas.getContext("2d");
+        const marchew = document.getElementById('marchew');
+        const grunio = document.getElementById('grunio');
+        const hearts = document.getElementById('hearts');
+        const chmura = document.getElementById('chmura');
+        const audio = document.getElementById('audio');
+        const background = document.getElementById('background');
+        let colorsToChose = 4;
+
+        let floorHeight = 50;
+        let grunioWidth = 50;
+        let grunioHeight = 30;
+        let grunioX = (canvas.width / 2) - (grunioWidth / 2);
+        let grunioColorSwitch = 0;
+        let changeSide = 0;
+
+        let carrotWidth = 18;
+        let carrotHeight = 50;
+        let carrotsData = [];
+        let carrotSpeed = 1;
+
+        let heartWall = 20;
+        let heartPadding = 10;
+        let heartsCount = 3;
+        let heartPulseCounter = 0;
+
+        let points = 0;
+
+        let count = 0;
+        let countTo = 120;
+
+
+
+        draw();
+
+        background.src = "audio/background" + (Math.floor(Math.random() * 3) + 1) + ".mp3";
+        background.load();
+        background.play();
+
+        document.addEventListener("keydown", keyDownHandler, false);
+        document.addEventListener("mousemove", mouseMoveHandler, false);
+
+        function keyDownHandler(e) {
+            if (e.key == "Right" || e.key == "ArrowRight" || e.key == "d") {
+                if (grunioColorSwitch != colorsToChose - 1) {
+                    grunioColorSwitch++;
+                } else {
+                    grunioColorSwitch = 0;
+                }
+            }
+            else if (e.key == "Left" || e.key == "ArrowLeft" || e.key == "a") {
+                if (grunioColorSwitch != 0) {
+                    grunioColorSwitch--;
+                } else {
+                    grunioColorSwitch = colorsToChose - 1;
+                }
+            }
+        }
+
+
+        function mouseMoveHandler(e) {
+            var relativeX = e.clientX - canvas.offsetLeft;
+            if (e.clientX > 0 && relativeX < canvas.width) {
+                var buff = grunioX;
+                grunioX = relativeX - grunioWidth / 2;
+                if (grunioX > buff) {
+                    changeSide = 30;
+                }
+                else {
+                    changeSide = 0;
+                }
+                if ((relativeX + grunioWidth / 2) > canvas.width) {
+                    grunioX = canvas.width - grunioWidth;
+                }
+                else if (grunioX < 0) {
+                    grunioX = 0;
+                }
+            }
+        }
+
+        function drawFloor() {
+            ctx.beginPath();
+            ctx.drawImage(chmura, 0, canvas.height - 60);
+            ctx.rect(0, canvas.height - floorHeight, canvas.width, floorHeight);
+            ctx.fillStyle = "rgba(0, 0, 0, 0)";
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawGrunio() {
+            ctx.beginPath();
+            ctx.drawImage(grunio, grunioWidth * grunioColorSwitch, changeSide, grunioWidth, grunioHeight, grunioX, canvas.height - floorHeight - grunioHeight, grunioWidth, grunioHeight);
+            ctx.rect(grunioX, canvas.height - floorHeight - grunioHeight, grunioWidth, grunioHeight);
+            ctx.fillStyle = "rgba(0, 0, 0, 0)";
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawCarrots() {
+            for (let i = 0; i < carrotsData.length; i++) {
+                ctx.beginPath();
+                ctx.drawImage(marchew, carrotWidth * carrotsData[i][2], 0, carrotWidth, carrotHeight, carrotsData[i][0], carrotsData[i][1], carrotWidth, carrotHeight);
+                ctx.rect(carrotsData[i][0], carrotsData[i][1], carrotWidth, carrotHeight);
+                ctx.fillStyle = "rgba(0, 0, 0, 0)";
+                ctx.fill();
+                ctx.closePath();
+                carrotsData[i][1] += carrotSpeed;
+                if (carrotsData[i][1] + carrotHeight > canvas.height - floorHeight) {
+                    carrotsData.splice(i, 1);
+                    heartsCount--;
+                    points -= 50;
+                    var whichSound = Math.floor(Math.random() * 3) + 1;
+                    audio.src = "audio/hit" + whichSound + ".mp3";
+                    audio.load();
+                    audio.play();
+                }
+                else if (carrotsData[i][1] + carrotHeight > canvas.height - grunioHeight - floorHeight && carrotsData[i][2] == grunioColorSwitch && carrotsData[i][0] >= grunioX - carrotWidth && carrotsData[i][0] < grunioX + grunioWidth + carrotWidth) {
+                    carrotsData.splice(i, 1);
+                    var whichSound = Math.floor(Math.random() * 5) + 1;
+                    audio.src = "audio/chrupanie" + whichSound + ".mp3";
+                    audio.load();
+                    audio.play();
+                    points += 100 + (200 * carrotSpeed);
+                }
+            }
+        }
+
+        function addCarrot() {
+            x = Math.floor(Math.random() * (canvas.width - carrotWidth));
+            color = Math.floor(Math.random() * colorsToChose);
+            y = 0;
+            carrotsData.push([x, y, color]);
+        }
+
+        function drawHearts() {
+            ctx.beginPath();
+            var typeSwitch = 0;
+            if (heartPulseCounter >= 0 && heartPulseCounter < 90 + (heartsCount * 20)) { typeSwitch = 0; }
+            else if (heartPulseCounter >= (90 + (heartsCount * 20)) && heartPulseCounter < (105 + (heartsCount * 20))) { typeSwitch = 1; }
+            else if (heartPulseCounter >= (105 + (heartsCount * 20)) && heartPulseCounter < (120 + (heartsCount * 40))) { typeSwitch = 2; }
+            else {
+                heartPulseCounter = 0;
+            }
+            for (let i = 1; i < heartsCount + 1; i++) {
+                ctx.drawImage(hearts, heartWall * typeSwitch, 0, heartWall, heartWall, canvas.width - ((heartWall + heartPadding) * i), heartPadding, heartWall, heartWall);
+                heartPulseCounter++;
+            }
+            ctx.closePath();
+        }
+
+        function drawPoints() {
+            ctx.beginPath();
+            ctx.font = heartWall + "px Arial";
+            ctx.fillStyle = "white";
+            ctx.fillText(points, heartPadding, 25);
+            ctx.closePath();
+        }
+
+        function draw() {
+            if (!heartsCount) {
+                let wiadomosc = "GAME OVER\nWynik: " + points;
+                alert(wiadomosc);
+                document.location.reload();
+            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawCarrots();
+            drawGrunio();
+            drawFloor();
+            drawHearts();
+            drawPoints();
+            if (count == countTo) { addCarrot(); count = 0; carrotSpeed += 0.05; countTo--; } else { count++; }
+            requestAnimationFrame(draw);
+        }
+    </script>
+</body>
