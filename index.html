@@ -208,6 +208,7 @@
         function draw() {
             if (!heartsCount) {
                 let message = "GAME OVER\nScore: " + points;
+                heartsCount = 3;
                 if(!alert(message)){window.location.reload();} 
             }
             ctx.clearRect(0, 0, canvas.width, canvas.height);
