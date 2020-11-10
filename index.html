@@ -208,8 +208,7 @@
         function draw() {
             if (!heartsCount) {
                 let wiadomosc = "GAME OVER\nWynik: " + points;
-                alert(wiadomosc);
-                location.reload(); 
+                if(!alert(wiadomosc)){window.location.reload();} 
             }
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawCarrots();
